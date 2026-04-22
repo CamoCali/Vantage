@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum IntegrationProvider {
+  HUBSPOT
+  GA4
+  META
+  GOOGLE_ADS
+  SALESFORCE
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  hashedPassword String?
+  role           Role      @default(EDITOR)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  campaigns      Campaign[] @relation("CampaignOwner")
+  tasks          Task[]     @relation("TaskAssignee")
+}
+
+model Integration {
+  id           String              @id @default(cuid())
+  userId       String
+  provider     IntegrationProvider
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  connectedAt  DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([userId, provider])
+}
+
+model MetricSnapshot {
+  id         String   @id @default(cuid())
+  provider   IntegrationProvider
+  metricKey  String
+  value      Float
+  dimensions Json?
+  date       DateTime
+  pulledAt   DateTime @default(now())
+
+  @@index([provider, metricKey, date])
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  status      CampaignStatus @default(DRAFT)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  ownerId     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  owner  User           @relation("CampaignOwner", fields: [ownerId], references: [id])
+  tasks  Task[]
+  events CalendarEvent[]
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  campaignId  String
+  assigneeId  String?
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  assignee User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+}
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  title       String
+  type        String    @default("campaign")
+  startDate   DateTime
+  endDate     DateTime
+  description String?
+  campaignId  String?
+  createdAt   DateTime  @default(now())
+
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+}

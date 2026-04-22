@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.slingshotapp.io)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --yes)",
+      "Read(//private/tmp/**)",
+      "Bash(npx create-next-app@latest vantage --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --yes)",
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(timeout 25 npm run dev)",
+      "Bash(npm run *)",
+      "Bash(openssl rand *)"
+    ]
+  }
+}
