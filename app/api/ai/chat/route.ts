@@ -1,29 +1,35 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { toolDefinitions, executeTool, Widget } from "@/lib/ai/tools";
+import { auth } from "@/lib/auth";
+import { toolDefinitions, executeTool, buildContextSnapshot, Widget } from "@/lib/ai/tools";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are Vantage AI, an expert marketing analyst embedded inside the Vantage marketing platform.
+const BASE_SYSTEM_PROMPT = `You are Vantage AI, an expert marketing analyst embedded inside the Vantage marketing execution platform.
 
-Your job is to answer questions about marketing performance, campaign health, and channel effectiveness using the available data tools. You have access to:
-- KPI summaries (MQLs, SQLs, pipeline, ad spend, ROAS)
-- MQL/SQL trends over time
-- Organic vs paid traffic trends
-- Pipeline and closed won trends
-- Ad spend breakdown by channel
+Your job is to answer questions about marketing performance, campaigns, tasks, and channel effectiveness using the available data tools. You have access to:
+- Live KPI data from connected integrations (HubSpot, GA4, Meta Ads, Google Ads, Salesforce)
+- Campaign list, status, budgets, and task progress
+- Metric trends over time for any connected integration
+- Ad spend breakdowns by channel
 
-When a user asks a question:
-1. Identify which data tools you need to call
-2. Call the relevant tools to fetch data
-3. ALWAYS call create_widget to render a chart when you have trend or comparison data
-4. Provide a concise, insight-driven answer — not just raw numbers
+When answering:
+1. Call the relevant data tools first — never guess at numbers
+2. Always call create_widget to render a chart when you have trend or comparison data worth visualising
+3. Give a concise, insight-driven answer — highlight what's notable, improving, or needs attention
+4. If data isn't available (integration not connected), say so and explain what connecting it would unlock
+5. Reference specific campaign names and real numbers when available
 
-Be specific and actionable. Instead of just reporting numbers, highlight what's notable, what's improving, what needs attention, and what you'd recommend.
-
-Format your text response in clear sections. Keep it focused — 2-4 paragraphs max.`;
+Format: 2-4 short paragraphs. No headers. Be direct and actionable — you're a senior analyst, not a chatbot.`;
 
 export async function POST(req: Request) {
+  const session = await auth();
+  if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+
   const { messages } = await req.json();
+  const userId = session.user.id;
+
+  const contextSnapshot = await buildContextSnapshot(userId);
+  const systemPrompt = `${BASE_SYSTEM_PROMPT}\n\n${contextSnapshot}`;
 
   const encoder = new TextEncoder();
 
@@ -32,20 +38,18 @@ export async function POST(req: Request) {
       try {
         const widgets: Widget[] = [];
         const toolResults: Anthropic.MessageParam[] = [...messages];
-
-        // Agentic loop — Claude may call multiple tools before responding
         let continueLoop = true;
+
         while (continueLoop) {
           const response = await anthropic.messages.create({
             model: "claude-sonnet-4-6",
             max_tokens: 2048,
-            system: SYSTEM_PROMPT,
+            system: systemPrompt,
             tools: toolDefinitions,
             messages: toolResults,
           });
 
           if (response.stop_reason === "tool_use") {
-            // Process all tool calls
             const toolUseBlocks = response.content.filter(
               (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
             );
@@ -53,12 +57,18 @@ export async function POST(req: Request) {
             const toolResultContents: Anthropic.ToolResultBlockParam[] = [];
 
             for (const toolUse of toolUseBlocks) {
-              const { result, widget } = executeTool(
+              const { result, widget } = await executeTool(
                 toolUse.name,
-                toolUse.input as Record<string, unknown>
+                toolUse.input as Record<string, unknown>,
+                userId
               );
 
-              if (widget) widgets.push(widget);
+              if (widget) {
+                widgets.push(widget);
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ type: "widgets", widgets: [widget] })}\n\n`)
+                );
+              }
 
               toolResultContents.push({
                 type: "tool_result",
@@ -67,49 +77,30 @@ export async function POST(req: Request) {
               });
             }
 
-            // Add assistant message and tool results to history
             toolResults.push({ role: "assistant", content: response.content });
             toolResults.push({ role: "user", content: toolResultContents });
           } else {
-            // Final text response — stream it
             continueLoop = false;
 
-            // Send widgets first
-            if (widgets.length > 0) {
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "widgets", widgets })}\n\n`
-                )
-              );
-            }
-
-            // Stream text
             const textContent = response.content
               .filter((b): b is Anthropic.TextBlock => b.type === "text")
               .map((b) => b.text)
               .join("");
 
-            // Stream word by word for a nice effect
             const words = textContent.split(" ");
             for (const word of words) {
               controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ type: "text", text: word + " " })}\n\n`
-                )
+                encoder.encode(`data: ${JSON.stringify({ type: "text", text: word + " " })}\n\n`)
               );
-              await new Promise((r) => setTimeout(r, 12));
+              await new Promise((r) => setTimeout(r, 10));
             }
 
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
-            );
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
           }
         }
       } catch (err) {
         controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({ type: "error", message: String(err) })}\n\n`
-          )
+          encoder.encode(`data: ${JSON.stringify({ type: "error", message: String(err) })}\n\n`)
         );
       } finally {
         controller.close();

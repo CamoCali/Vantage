@@ -14,11 +14,11 @@ interface Message {
 }
 
 const SUGGESTED_PROMPTS = [
-  "How are MQLs trending compared to last quarter?",
-  "What's our blended ROAS and how is it tracking?",
-  "Show me ad spend breakdown by channel",
-  "How much pipeline have we generated this year?",
-  "Compare organic vs paid traffic over the last 7 months",
+  "What campaigns are currently active and how are they tracking?",
+  "How are MQLs trending over the last 30 days?",
+  "Show me our ad spend breakdown by channel",
+  "What tasks are still in progress across all campaigns?",
+  "Summarize our overall marketing performance right now",
 ];
 
 export default function AIPage() {
