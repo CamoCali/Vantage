@@ -11,7 +11,7 @@ import {
   Plug,
   Users,
   LogOut,
-  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -31,96 +31,114 @@ const settingsNav = [
 
 export default function Sidebar({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
-  const [settingsOpen, setSettingsOpen] = useState(
-    pathname.startsWith("/settings")
-  );
+  const [settingsOpen, setSettingsOpen] = useState(pathname.startsWith("/settings"));
 
   return (
-    <aside className="flex flex-col w-60 min-h-screen bg-slate-900 text-slate-300">
+    <aside
+      style={{ width: 224, minWidth: 224 }}
+      className="flex flex-col h-screen bg-[#111827] text-white select-none"
+    >
       {/* Logo */}
-      <div className="flex items-center gap-2 px-5 py-5 border-b border-slate-800">
-        <div className="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center">
+      <div className="flex items-center gap-2.5 px-5 h-14 border-b border-white/[0.06]">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
           <span className="text-white font-bold text-sm">V</span>
         </div>
-        <span className="text-white font-semibold text-lg tracking-tight">
-          Vantage
-        </span>
+        <span className="text-white font-semibold text-[15px] tracking-tight">Vantage</span>
       </div>
 
-      {/* Main nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      {/* Nav */}
+      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
+        {/* Section label */}
+        <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest px-3 pb-1.5 pt-1">
+          Main
+        </p>
+
         {nav.map(({ label, href, icon: Icon }) => {
-          const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-150",
                 active
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-900/50"
+                  : "text-white/50 hover:bg-white/[0.06] hover:text-white/90"
               )}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon className={cn("w-4 h-4 shrink-0", active ? "text-white" : "text-white/40")} />
               {label}
             </Link>
           );
         })}
 
-        {/* Settings section */}
-        <div className="pt-4">
+        {/* Settings */}
+        <div className="pt-3">
+          <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest px-3 pb-1.5">
+            Settings
+          </p>
           <button
             onClick={() => setSettingsOpen((o) => !o)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-150",
+              pathname.startsWith("/settings")
+                ? "text-white/90"
+                : "text-white/50 hover:bg-white/[0.06] hover:text-white/90"
+            )}
           >
-            <Settings className="w-4 h-4 shrink-0" />
+            <Settings className="w-4 h-4 shrink-0 text-white/40" />
             Settings
-            <ChevronDown
+            <ChevronRight
               className={cn(
-                "w-3.5 h-3.5 ml-auto transition-transform",
-                settingsOpen && "rotate-180"
+                "w-3 h-3 ml-auto text-white/30 transition-transform duration-200",
+                settingsOpen && "rotate-90"
               )}
             />
           </button>
-          {settingsOpen &&
-            settingsNav.map(({ label, href, icon: Icon }) => {
-              const active = pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-3 pl-9 pr-3 py-2 rounded-lg text-sm transition-colors",
-                    active
-                      ? "text-white bg-slate-800"
-                      : "text-slate-500 hover:bg-slate-800 hover:text-white"
-                  )}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  {label}
-                </Link>
-              );
-            })}
+
+          {settingsOpen && (
+            <div className="ml-3 mt-0.5 space-y-0.5 border-l border-white/[0.08] pl-3">
+              {settingsNav.map(({ label, href, icon: Icon }) => {
+                const active = pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] transition-all duration-150",
+                      active
+                        ? "text-white bg-white/[0.08]"
+                        : "text-white/40 hover:text-white/80 hover:bg-white/[0.05]"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </nav>
 
-      {/* User footer */}
-      <div className="px-3 py-4 border-t border-slate-800">
-        <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+      {/* User */}
+      <div className="px-2.5 py-3 border-t border-white/[0.06]">
+        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.06] transition-colors cursor-pointer group">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
             {userName?.[0]?.toUpperCase() ?? "U"}
           </div>
-          <span className="text-sm text-slate-300 truncate flex-1">
-            {userName ?? "User"}
-          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-medium text-white/80 truncate leading-none mb-0.5">
+              {userName ?? "User"}
+            </p>
+            <p className="text-[11px] text-white/30 leading-none">Admin</p>
+          </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="text-slate-500 hover:text-slate-300 transition-colors"
+            className="text-white/20 hover:text-white/60 transition-colors opacity-0 group-hover:opacity-100"
             title="Sign out"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
