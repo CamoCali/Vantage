@@ -15,7 +15,7 @@ export async function PATCH(req: Request) {
   const updates: { name?: string; hashedPassword?: string } = {};
 
   if (name !== undefined) {
-    updates.name = name.trim() || user.name ?? "";
+    updates.name = name.trim() || (user.name ?? "");
   }
 
   if (newPassword) {
