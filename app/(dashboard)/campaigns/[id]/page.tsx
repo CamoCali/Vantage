@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Clock, Plus, User } from "lucide-react";
 import KanbanBoard from "@/components/campaigns/KanbanBoard";
-import CommentThread from "@/components/collaboration/CommentThread";
+import CampaignSidePanel from "@/components/campaigns/CampaignSidePanel";
 import { auth } from "@/lib/auth";
 
 const mockCampaign = {
@@ -75,16 +75,16 @@ export default async function CampaignDetailPage({
         </div>
       </div>
 
-      {/* Split view: Kanban + Discussion */}
+      {/* Split view: Kanban + Side panel */}
       <div className="flex flex-1 overflow-hidden">
         {/* Kanban — takes most of the space */}
         <div className="flex-1 overflow-y-auto px-7 py-6">
           <KanbanBoard />
         </div>
 
-        {/* Discussion panel */}
+        {/* Tabbed side panel: Discussion + Assets */}
         <div className="w-72 shrink-0 border-l border-gray-200/60 bg-white flex flex-col overflow-hidden">
-          <CommentThread
+          <CampaignSidePanel
             campaignId={id}
             currentUserId={session?.user?.id}
           />

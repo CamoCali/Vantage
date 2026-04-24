@@ -47,6 +47,7 @@ model User {
   campaigns      Campaign[] @relation("CampaignOwner")
   tasks          Task[]     @relation("TaskAssignee")
   comments       Comment[]
+  assets         Asset[]
 }
 
 model Integration {
@@ -90,6 +91,7 @@ model Campaign {
   tasks    Task[]
   events   CalendarEvent[]
   comments Comment[]
+  assets   Asset[]
 }
 
 model Task {
@@ -131,6 +133,21 @@ model Comment {
 
   author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, createdAt])
+}
+
+model Asset {
+  id         String   @id @default(cuid())
+  title      String
+  url        String
+  provider   String   @default("other")
+  campaignId String
+  addedById  String
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  addedBy  User     @relation(fields: [addedById], references: [id])
 
   @@index([campaignId, createdAt])
 }
