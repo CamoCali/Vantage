@@ -10,6 +10,7 @@ import {
   Settings,
   Plug,
   Users,
+  UserCircle,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const nav = [
 ];
 
 const settingsNav = [
+  { label: "Profile", href: "/settings/profile", icon: UserCircle },
   { label: "Integrations", href: "/settings/integrations", icon: Plug },
   { label: "Users", href: "/settings/users", icon: Users },
 ];
