@@ -1,40 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { Plus, GripVertical, Calendar, User, X } from "lucide-react";
+import { Plus, GripVertical, Calendar, User, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export interface KanbanTask {
+interface Task {
   id: string;
   title: string;
-  assignee?: string;
-  dueDate?: string;
-  description?: string;
-  priority?: "low" | "medium" | "high";
+  description: string | null;
+  status: string;
+  dueDate: string | null;
+  assignee: { id: string; name: string | null; email: string } | null;
 }
 
-export interface KanbanColumn {
+interface KanbanColumn {
   id: string;
   title: string;
-  tasks: KanbanTask[];
   color: string;
   dot: string;
+  tasks: Task[];
 }
 
-const PRIORITY_COLORS = {
-  high: "bg-red-100 text-red-600 border-red-200",
-  medium: "bg-amber-100 text-amber-600 border-amber-200",
-  low: "bg-slate-100 text-slate-500 border-slate-200",
-};
+const COLUMNS: Omit<KanbanColumn, "tasks">[] = [
+  { id: "TODO",        title: "To Do",       color: "border-t-slate-300",   dot: "bg-slate-300"   },
+  { id: "IN_PROGRESS", title: "In Progress", color: "border-t-blue-400",    dot: "bg-blue-400"    },
+  { id: "REVIEW",      title: "In Review",   color: "border-t-amber-400",   dot: "bg-amber-400"   },
+  { id: "DONE",        title: "Done",        color: "border-t-emerald-400", dot: "bg-emerald-400" },
+];
 
-interface NewTaskFormProps {
+function NewTaskForm({
+  columnId,
+  onAdd,
+  onCancel,
+}: {
   columnId: string;
   onAdd: (columnId: string, title: string) => void;
   onCancel: () => void;
-}
-
-function NewTaskForm({ columnId, onAdd, onCancel }: NewTaskFormProps) {
+}) {
   const [title, setTitle] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
@@ -60,11 +63,7 @@ function NewTaskForm({ columnId, onAdd, onCancel }: NewTaskFormProps) {
         >
           Add task
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-2 py-1.5 text-slate-400 hover:text-slate-600 transition-colors"
-        >
+        <button type="button" onClick={onCancel} className="px-2 py-1.5 text-slate-400 hover:text-slate-600">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -72,57 +71,34 @@ function NewTaskForm({ columnId, onAdd, onCancel }: NewTaskFormProps) {
   );
 }
 
-const INITIAL_COLUMNS: KanbanColumn[] = [
-  {
-    id: "TODO",
-    title: "To Do",
-    color: "border-t-slate-300",
-    dot: "bg-slate-300",
-    tasks: [
-      { id: "t10", title: "Mid-campaign landing page optimization", assignee: "Derek F.", dueDate: "Aug 5", priority: "high" },
-      { id: "t11", title: "August nurture email sequence", assignee: "Derek F.", dueDate: "Aug 1", priority: "medium" },
-      { id: "t12", title: "End-of-quarter campaign retrospective", assignee: "Derek F.", dueDate: "Sep 30", priority: "low" },
-    ],
-  },
-  {
-    id: "IN_PROGRESS",
-    title: "In Progress",
-    color: "border-t-blue-400",
-    dot: "bg-blue-400",
-    tasks: [
-      { id: "t8", title: "Week 2 performance review", assignee: "Derek F.", dueDate: "Jul 22", priority: "high" },
-      { id: "t9", title: "A/B test ad copy iteration #1", assignee: "Derek F.", dueDate: "Jul 28", priority: "medium" },
-    ],
-  },
-  {
-    id: "REVIEW",
-    title: "In Review",
-    color: "border-t-amber-400",
-    dot: "bg-amber-400",
-    tasks: [],
-  },
-  {
-    id: "DONE",
-    title: "Done",
-    color: "border-t-emerald-400",
-    dot: "bg-emerald-400",
-    tasks: [
-      { id: "t1", title: "Finalize messaging framework", assignee: "Derek F.", dueDate: "Jul 5", priority: "high" },
-      { id: "t2", title: "Create paid social ad creative (10 variants)", assignee: "Derek F.", dueDate: "Jul 10", priority: "high" },
-      { id: "t3", title: "Write and schedule launch email sequence", assignee: "Derek F.", dueDate: "Jul 12", priority: "medium" },
-      { id: "t4", title: "Set up Google Ads campaigns", assignee: "Derek F.", dueDate: "Jul 14", priority: "medium" },
-      { id: "t5", title: "Launch Meta campaigns", assignee: "Derek F.", dueDate: "Jul 15", priority: "high" },
-      { id: "t6", title: "Publish launch blog post + PR", assignee: "Derek F.", dueDate: "Jul 15", priority: "low" },
-    ],
-  },
-];
+function formatDue(iso: string | null) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
-export default function KanbanBoard() {
-  const [columns, setColumns] = useState<KanbanColumn[]>(INITIAL_COLUMNS);
+export default function KanbanBoard({ campaignId }: { campaignId: string }) {
+  const [columns, setColumns] = useState<KanbanColumn[]>(
+    COLUMNS.map((c) => ({ ...c, tasks: [] }))
+  );
+  const [loading, setLoading] = useState(true);
   const [addingTo, setAddingTo] = useState<string | null>(null);
 
-  function onDragEnd(result: DropResult) {
-    const { source, destination } = result;
+  useEffect(() => {
+    fetch(`/api/tasks?campaignId=${campaignId}`)
+      .then((r) => r.json())
+      .then((tasks: Task[]) => {
+        setColumns(
+          COLUMNS.map((col) => ({
+            ...col,
+            tasks: tasks.filter((t) => t.status === col.id),
+          }))
+        );
+      })
+      .finally(() => setLoading(false));
+  }, [campaignId]);
+
+  async function onDragEnd(result: DropResult) {
+    const { source, destination, draggableId } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
@@ -130,16 +106,24 @@ export default function KanbanBoard() {
     const srcCol = newColumns.find((c) => c.id === source.droppableId)!;
     const dstCol = newColumns.find((c) => c.id === destination.droppableId)!;
     const [moved] = srcCol.tasks.splice(source.index, 1);
+    moved.status = dstCol.id;
     dstCol.tasks.splice(destination.index, 0, moved);
     setColumns(newColumns);
+
+    await fetch(`/api/tasks/${draggableId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: dstCol.id }),
+    });
   }
 
-  function addTask(columnId: string, title: string) {
-    const newTask: KanbanTask = {
-      id: `task-${Date.now()}`,
-      title,
-      priority: "medium",
-    };
+  async function addTask(columnId: string, title: string) {
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, status: columnId, campaignId }),
+    });
+    const newTask: Task = await res.json();
     setColumns((cols) =>
       cols.map((col) =>
         col.id === columnId ? { ...col, tasks: [newTask, ...col.tasks] } : col
@@ -151,6 +135,14 @@ export default function KanbanBoard() {
   const totalTasks = columns.reduce((s, c) => s + c.tasks.length, 0);
   const doneTasks = columns.find((c) => c.id === "DONE")?.tasks.length ?? 0;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Progress bar */}
@@ -161,12 +153,9 @@ export default function KanbanBoard() {
             style={{ width: `${totalTasks > 0 ? (doneTasks / totalTasks) * 100 : 0}%` }}
           />
         </div>
-        <span className="text-xs text-slate-400 shrink-0">
-          {doneTasks}/{totalTasks} tasks
-        </span>
+        <span className="text-xs text-slate-400 shrink-0">{doneTasks}/{totalTasks} tasks</span>
       </div>
 
-      {/* Board */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {columns.map((col) => (
@@ -177,7 +166,6 @@ export default function KanbanBoard() {
                 col.color
               )}
             >
-              {/* Column header */}
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-2">
                   <div className={cn("w-2 h-2 rounded-full", col.dot)} />
@@ -196,16 +184,10 @@ export default function KanbanBoard() {
                 </button>
               </div>
 
-              {/* New task form */}
               {addingTo === col.id && (
-                <NewTaskForm
-                  columnId={col.id}
-                  onAdd={addTask}
-                  onCancel={() => setAddingTo(null)}
-                />
+                <NewTaskForm columnId={col.id} onAdd={addTask} onCancel={() => setAddingTo(null)} />
               )}
 
-              {/* Tasks */}
               <Droppable droppableId={col.id}>
                 {(provided, snapshot) => (
                   <div
@@ -242,24 +224,16 @@ export default function KanbanBoard() {
                                   {task.title}
                                 </p>
                                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                  {task.priority && (
-                                    <span className={cn(
-                                      "text-xs px-1.5 py-0.5 rounded border font-medium capitalize",
-                                      PRIORITY_COLORS[task.priority]
-                                    )}>
-                                      {task.priority}
-                                    </span>
-                                  )}
                                   {task.dueDate && (
                                     <span className="flex items-center gap-1 text-xs text-slate-400">
                                       <Calendar className="w-3 h-3" />
-                                      {task.dueDate}
+                                      {formatDue(task.dueDate)}
                                     </span>
                                   )}
                                   {task.assignee && (
                                     <span className="flex items-center gap-1 text-xs text-slate-400">
                                       <User className="w-3 h-3" />
-                                      {task.assignee.split(" ")[0]}
+                                      {(task.assignee.name ?? task.assignee.email).split(" ")[0]}
                                     </span>
                                   )}
                                 </div>
@@ -269,7 +243,7 @@ export default function KanbanBoard() {
                         )}
                       </Draggable>
                     ))}
-                    {col.tasks.length === 0 && !snapshot.isDraggingOver && (
+                    {col.tasks.length === 0 && !snapshot.isDraggingOver && addingTo !== col.id && (
                       <div className="flex items-center justify-center h-16 text-xs text-slate-300 border-2 border-dashed border-slate-200 rounded-lg">
                         Drop tasks here
                       </div>
