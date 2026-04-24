@@ -11,7 +11,10 @@
       "Bash(timeout 25 npm run dev)",
       "Bash(npm run *)",
       "Bash(openssl rand *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "WebFetch(domain:vantagehub.lovable.app)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(awk '{print $1}')"
     ]
   }
 }

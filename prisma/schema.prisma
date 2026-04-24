@@ -46,6 +46,7 @@ model User {
 
   campaigns      Campaign[] @relation("CampaignOwner")
   tasks          Task[]     @relation("TaskAssignee")
+  comments       Comment[]
 }
 
 model Integration {
@@ -85,9 +86,10 @@ model Campaign {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  owner  User           @relation("CampaignOwner", fields: [ownerId], references: [id])
-  tasks  Task[]
-  events CalendarEvent[]
+  owner    User           @relation("CampaignOwner", fields: [ownerId], references: [id])
+  tasks    Task[]
+  events   CalendarEvent[]
+  comments Comment[]
 }
 
 model Task {
@@ -116,4 +118,19 @@ model CalendarEvent {
   createdAt   DateTime  @default(now())
 
   campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  content    String
+  authorId   String
+  campaignId String?
+  metricKey  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, createdAt])
 }
