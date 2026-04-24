@@ -10,7 +10,8 @@
       "Bash(npx tsc *)",
       "Bash(timeout 25 npm run dev)",
       "Bash(npm run *)",
-      "Bash(openssl rand *)"
+      "Bash(openssl rand *)",
+      "Bash(npx next *)"
     ]
   }
 }
