@@ -9,22 +9,29 @@ interface KPICardProps {
   icon?: React.ReactNode;
   accent?: string;
   gradient?: string;
+  live?: boolean;
 }
 
 export default function KPICard({
   title,
   value,
   change,
-  changeLabel = "vs last month",
+  changeLabel = "vs last period",
   icon,
   gradient = "from-indigo-500 to-violet-500",
+  live = false,
 }: KPICardProps) {
   const positive = change >= 0;
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100/80 group">
       <div className="flex items-start justify-between mb-4">
-        <p className="text-[13px] font-medium text-gray-500">{title}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-medium text-gray-500">{title}</p>
+          {live && (
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Live data" />
+          )}
+        </div>
         {icon && (
           <div className={cn(
             "w-8 h-8 rounded-xl flex items-center justify-center text-sm bg-gradient-to-br text-white shadow-sm",
