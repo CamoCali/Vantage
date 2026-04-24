@@ -128,7 +128,7 @@ export default function AIPage() {
             <Sparkles className="w-4 h-4 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-base font-semibold text-slate-900">Vantage AI</h1>
+            <h1 className="text-base font-semibold text-slate-900">FlowDash AI</h1>
             <p className="text-xs text-slate-400">Ask anything about your marketing performance</p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function AIPage() {
               <Sparkles className="w-6 h-6 text-indigo-600" />
             </div>
             <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Ask Vantage AI anything
+              Ask FlowDash AI anything
             </h2>
             <p className="text-sm text-slate-500 mb-8">
               Get instant insights about your campaigns, channel performance, and marketing KPIs.

@@ -101,7 +101,7 @@ function CredentialsModal({ creds, onClose }: { creds: Credentials; onClose: () 
   const [copied, setCopied] = useState(false);
 
   function copyAll() {
-    navigator.clipboard.writeText(`Vantage login\nURL: ${window.location.origin}\nEmail: ${creds.email}\nPassword: ${creds.password}`);
+    navigator.clipboard.writeText(`FlowDash login\nURL: ${window.location.origin}\nEmail: ${creds.email}\nPassword: ${creds.password}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -182,7 +182,7 @@ export default function UsersClient({ initialUsers, currentUserId, isAdmin }: {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Users</h1>
-            <p className="text-sm text-slate-500 mt-1">Manage who has access to Vantage</p>
+            <p className="text-sm text-slate-500 mt-1">Manage who has access to FlowDash</p>
           </div>
           {isAdmin && (
             <button onClick={() => setShowInvite(true)}

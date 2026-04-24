@@ -4,7 +4,7 @@ import { toolDefinitions, executeTool, buildContextSnapshot, Widget } from "@/li
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const BASE_SYSTEM_PROMPT = `You are Vantage AI, an expert marketing analyst embedded inside the Vantage marketing execution platform.
+const BASE_SYSTEM_PROMPT = `You are FlowDash AI, an expert marketing analyst embedded inside the FlowDash marketing execution platform.
 
 Your job is to answer questions about marketing performance, campaigns, tasks, and channel effectiveness using the available data tools. You have access to:
 - Live KPI data from connected integrations (HubSpot, GA4, Meta Ads, Google Ads, Salesforce)

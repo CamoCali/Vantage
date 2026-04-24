@@ -37,9 +37,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-bold text-lg">V</span>
+            <span className="text-white font-bold text-lg">F</span>
           </div>
-          <span className="text-white font-semibold text-xl tracking-tight">Vantage</span>
+          <span className="text-white font-semibold text-xl tracking-tight">FlowDash</span>
         </div>
 
         {/* Card */}
@@ -93,7 +93,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-white/20 text-xs mt-6">
-          Vantage · Internal Marketing Platform
+          FlowDash · Marketing Execution Platform
         </p>
       </div>
     </div>

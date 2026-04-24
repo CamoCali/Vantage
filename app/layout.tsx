@@ -5,7 +5,7 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
-  title: "Vantage — Marketing Execution Platform",
+  title: "FlowDash — Marketing Execution Platform",
   description: "Unified marketing analytics and campaign management",
 };
 

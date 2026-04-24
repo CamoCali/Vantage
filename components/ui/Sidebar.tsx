@@ -43,9 +43,9 @@ export default function Sidebar({ userName }: { userName?: string | null }) {
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 h-14 border-b border-white/[0.06]">
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-          <span className="text-white font-bold text-sm">V</span>
+          <span className="text-white font-bold text-sm">F</span>
         </div>
-        <span className="text-white font-semibold text-[15px] tracking-tight">Vantage</span>
+        <span className="text-white font-semibold text-[15px] tracking-tight">FlowDash</span>
       </div>
 
       {/* Nav */}
